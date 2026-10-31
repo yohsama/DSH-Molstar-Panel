@@ -1,0 +1,43 @@
+{
+  "name": "dsh-molstar-preview",
+  "version": "1.1.0",
+  "private": false,
+  "description": "Mol* (Molstar) panel plugin for DeepSeek Harness: interactive 3D preview for PDB/MMCIF structures and GROMACS/AMBER/CHARMM trajectories, with agent-operable selections, styles, and state snapshots.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yohsama/DSH-Molstar-Panel.git"
+  },
+  "keywords": ["dsh", "deepseek-harness", "plugin", "molstar", "mol*", "pdb", "cif", "xtc", "trr", "trajectory", "molecular-visualization"],
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "client.molstar.js",
+    "client.molscript.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "licenses/molstar-LICENSE.txt",
+    "scripts/*.mjs",
+    "scripts/*.cjs",
+    "README.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-sidebar-documentpreview"
+      ]
+    }
+  }
+}

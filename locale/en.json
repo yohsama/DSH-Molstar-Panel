@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Mol* Structure Preview",
+    "description": "Opens PDB, MMCIF/CIF and other molecular structure files in the right Sidebar as an interactive Mol* 3D view."
+  }
+}

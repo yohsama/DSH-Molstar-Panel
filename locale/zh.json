@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Mol* 分子结构预览",
+    "description": "在右侧边栏用 Mol* 交互式 3D 视图打开 PDB、MMCIF/CIF 等分子结构文件。"
+  }
+}

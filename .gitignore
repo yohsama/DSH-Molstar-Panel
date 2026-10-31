@@ -1,0 +1,8 @@
+# Build-time scratch (molstar sources are re-downloaded on demand)
+.build/
+node_modules/
+.npm-cache/
+
+# Tooling scratch
+.ref*/
+.tools/
