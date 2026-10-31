@@ -22,6 +22,7 @@ description: Operate the DSH Mol* Panel plugin — drive the open 3D structure/t
 | `style` | Create a **persistent styled component**: one query + one or more representations with optional uniform colors |
 | `clear-style` | Remove all styled components created via `style` |
 | `state` | Export the full Mol* view state (MolJ JSON); pass the same JSON back as `snapshot` to restore the view |
+| `load` | Append another structure file (`file`, workspace path) to the open panel — call repeatedly to superpose structures |
 | `clear` | Remove selection/highlight marks (`mode` as for apply) |
 | `reset` | Reset the camera |
 | `layout` | Move the structure panel: `right` or `bottom` |
@@ -90,6 +91,17 @@ Save / restore the current view (MolJ JSON):
 { "action": "state" }                          // export — keep the JSON
 { "action": "state", "snapshot": { ... } }     // restore verbatim
 ```
+
+Superpose two structures in one panel (each `load` appends a new root):
+
+```json
+{ "action": "load", "file": "apo.pdb" }
+{ "action": "load", "file": "holo.pdb" }
+{ "action": "reset" }    // frame both
+```
+
+Then style one of them by chain/expression as usual; clear with `clear-style`
+(components) — to unload whole structures, ask the user to reopen the panel.
 
 ## Trajectories
 

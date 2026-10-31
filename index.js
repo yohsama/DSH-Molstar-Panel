@@ -335,7 +335,9 @@ function molstarTool(sessions) {
       + 'select/highlight/focus arbitrary residues from a query, action=style to add a persistent styled component '
       + '(one query, one or more representations such as cartoon plus ball-and-stick, optional uniform color — e.g. '
       + 'highlight all HIS as cartoon+ball-and-stick in orange), action=clear-style to remove styled components, '
-      + 'action=state to export or import the full Mol* view state (the MolJ JSON save format), action=clear to '
+      + 'action=state to export or import the full Mol* view state (the MolJ JSON save format), action=load to '
+      + 'append another structure file to the open panel (repeat for superposition of apo/holo or poses), '
+      + 'action=clear to '
       + 'remove marks, action=reset to restore the camera, and action=layout to move the structure panel to the '
       + 'right side or under the viewport. '
       + 'Queries use PyMOL selection syntax by default ("chain A and resi 42-49", "resn HIS", "polymer and chain B"); '
@@ -352,8 +354,8 @@ function molstarTool(sessions) {
       properties: {
         action: {
           type: 'string',
-          enum: ['status', 'selection', 'apply', 'style', 'clear-style', 'state', 'clear', 'reset', 'layout'],
-          description: 'status: describe the panel; selection: read the current selection; apply: run a query; style: add a styled component; clear-style: remove styled components; state: export/import the Mol* view state; clear: remove marks; reset: reset the camera; layout: move the structure panel to the right or the bottom.',
+          enum: ['status', 'selection', 'apply', 'style', 'clear-style', 'state', 'load', 'clear', 'reset', 'layout'],
+          description: 'status: describe the panel; selection: read the current selection; apply: run a query; style: add a styled component; clear-style: remove styled components; state: export/import the Mol* view state; load: append another structure file to the panel; clear: remove marks; reset: reset the camera; layout: move the structure panel to the right or the bottom.',
         },
         expression: {
           type: 'string',
@@ -362,6 +364,10 @@ function molstarTool(sessions) {
         panel: {
           type: 'string',
           description: 'Panel bind token from the preview\'s "Send this panel to the chat" button; pass on every call once the user has bound a panel.',
+        },
+        file: {
+          type: 'string',
+          description: 'Workspace file path for action=load: append that structure to the open panel (repeatable for superposition).',
         },
         representations: {
           type: 'array',
@@ -463,6 +469,11 @@ function molstarTool(sessions) {
         };
       } else if (action === 'clear-style') {
         command = { op: 'clear-style' };
+      } else if (action === 'load') {
+        if (typeof args.file !== 'string' || args.file.trim() === '') {
+          throw new Error('action=load needs `file`, a workspace path like "confout.gro" or an absolute path');
+        }
+        command = { op: 'load', path: args.file };
       } else if (action === 'state') {
         command = { op: 'state', snapshot: args.snapshot };
       } else if (action === 'reset') {
@@ -517,6 +528,9 @@ function formatResult(action, result, answeredBy, caller) {
   }
   if (action === 'reset') lines.push('Camera reset.');
   if (action === 'clear-style') lines.push('Styled components removed.');
+  if (action === 'load' && typeof result.loadedFile === 'string') {
+    lines.push(`Appended structure: ${result.loadedFile}`);
+  }
   if (action === 'state') {
     if (result.state === null || result.state === undefined) {
       lines.push('State snapshot: unavailable.');

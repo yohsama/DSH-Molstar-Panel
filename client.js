@@ -348,6 +348,8 @@ window.__ModuleLoader__.load({
     const viewers = new Map();
     /** One poll loop per Session that currently has a preview mounted. */
     const bridges = new Map();
+    /** This plugin's context, kept for bridge-side file reads (the load op). */
+    let pluginCtxRef = undefined;
     let viewSequence = 0;
 
     /**
@@ -489,6 +491,30 @@ window.__ModuleLoader__.load({
           await view.handle.clearComponents();
           await sleep(120);
           return { id, ok: true, result: describeView(view) };
+        }
+        if (command.op === 'load') {
+          if (typeof command.path !== 'string' || command.path.trim() === '') {
+            throw new Error('`path` is required for load');
+          }
+          const files = workspaceFilesOf(pluginCtxRef);
+          if (files === undefined) throw new Error('The workspace file reader is unavailable.');
+          const read = unwrapRemote(
+            await files.readBytes(view.sessionId, command.path, {}, undefined),
+            'The file could not be read.',
+          );
+          const name = fileNameOf(String(command.path).replace(/\\/g, '/'));
+          const format = STRUCTURE_FORMATS[suffixOf(name.toLowerCase())];
+          if (format === undefined) {
+            throw new Error(`Unsupported structure suffix ".${suffixOf(name.toLowerCase())}".`);
+          }
+          if (typeof view.handle.appendStructure !== 'function') {
+            throw new Error('The open panel runs an older viewer module — refresh the page and retry.');
+          }
+          await view.handle.appendStructure({ data: decodeText(read !== null && read !== undefined ? read.data : undefined), format, label: name });
+          await sleep(250);
+          const result = describeView(view);
+          result.loadedFile = name;
+          return { id, ok: true, result };
         }
         if (command.op === 'state') {
           if (command.snapshot !== undefined && command.snapshot !== null) {
@@ -1724,6 +1750,7 @@ window.__ModuleLoader__.load({
 
     /** Register the implementation metadata, its copy, and its body. */
     function apply(ctx) {
+      pluginCtxRef = ctx;
       const t = ctx.locale.bind(LOCALE_NS);
       ctx.effect(() => ctx.locale.register(LOCALE_NS, 'en', EN), 'molstar-preview: en copy');
       ctx.effect(() => ctx.locale.register(LOCALE_NS, 'zh', ZH), 'molstar-preview: zh copy');

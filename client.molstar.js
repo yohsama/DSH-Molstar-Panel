@@ -8695,6 +8695,17 @@ return molstar;
           if (camera && typeof camera.reset === 'function') camera.reset();
         },
         /**
+         * Load one more structure into this viewer; Mol* appends a new root,
+         * so several files can be superposed in one panel.
+         * @param payload - structure text, Mol* format and display label.
+         * @returns the structure count after the append.
+         */
+        async appendStructure(payload) {
+          if (disposed) return undefined;
+          await viewer.loadStructureFromData(payload.data, payload.format, { dataLabel: payload.label });
+          return describeStructures(viewer);
+        },
+        /**
          * Add a structure component from a compiled query expression with one
          * or more representations (e.g. cartoon + ball-and-stick, uniform color).
          * @param expression - compiled Mol* query expression.
