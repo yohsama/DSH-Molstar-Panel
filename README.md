@@ -140,8 +140,9 @@ tool's actions and parameters, panel-binding rules, PyMOL/MolScript query
 syntax, copy-paste style recipes, and known limits — everything an agent needs
 to operate the panel precisely without rediscovering the bridge.
 
-Note: offline MVSJ/headless rendering was considered and deliberately not
-included — the browser panel plus this skill covers the interactive workflow.
+Note: offline MVSJ/headless rendering was prototyped (Playwright + Edge +
+`loadMvsData`) and deliberately dropped as too complex for the value; the
+browser panel plus this skill covers the interactive workflow.
 
 The panel long-polls the Host route only while a structure preview is mounted;
 commands are scoped to the calling Session's page. The route binds to the
