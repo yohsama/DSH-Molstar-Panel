@@ -356,8 +356,8 @@ function molstarTool(sessions) {
       properties: {
         action: {
           type: 'string',
-          enum: ['status', 'selection', 'components', 'apply', 'style', 'clear-style', 'state', 'load', 'clear', 'reset', 'layout'],
-          description: 'status: describe the panel; selection: read the current selection; components: list the panel\'s structure components and each representation\'s type/color; apply: run a query; style: add a styled component; clear-style: remove styled components; state: export/import the Mol* view state; load: append another structure file to the panel; clear: remove marks; reset: reset the camera; layout: move the structure panel to the right or the bottom.',
+          enum: ['status', 'selection', 'components', 'apply', 'style', 'opacity', 'clear-style', 'state', 'load', 'clear', 'reset', 'layout'],
+          description: 'status: describe the panel; selection: read the current selection; components: list the panel\'s structure components and each representation\'s type/color/opacity; apply: run a query; style: add a styled component; opacity: change one representation\'s opacity; clear-style: remove styled components; state: export/import the Mol* view state; load: append another structure file to the panel; clear: remove marks; reset: reset the camera; layout: move the structure panel to the right or the bottom.',
         },
         expression: {
           type: 'string',
@@ -370,6 +370,18 @@ function molstarTool(sessions) {
         file: {
           type: 'string',
           description: 'Workspace file path for action=load: append that structure to the open panel (repeatable for superposition).',
+        },
+        component: {
+          type: 'integer',
+          description: 'Component index for action=opacity, as listed by action=components.',
+        },
+        representation: {
+          type: 'integer',
+          description: 'Representation index within the component for action=opacity, as listed by action=components.',
+        },
+        alpha: {
+          type: 'number',
+          description: 'Opacity for action=opacity, 0 (transparent) to 1 (opaque).',
         },
         representations: {
           type: 'array',
@@ -478,6 +490,13 @@ function molstarTool(sessions) {
         command = { op: 'load', path: args.file };
       } else if (action === 'components') {
         command = { op: 'components' };
+      } else if (action === 'opacity') {
+        command = {
+          op: 'opacity',
+          component: Number(args.component),
+          representation: Number(args.representation),
+          alpha: Number(args.alpha),
+        };
       } else if (action === 'state') {
         command = { op: 'state', snapshot: args.snapshot };
       } else if (action === 'reset') {
@@ -535,6 +554,11 @@ function formatResult(action, result, answeredBy, caller) {
   if (action === 'load' && typeof result.loadedFile === 'string') {
     lines.push(`Appended structure: ${result.loadedFile}`);
   }
+  if (action === 'opacity' && result.opacitySet !== undefined) {
+    lines.push(
+      `Opacity set: component ${result.opacitySet.component}, representation ${result.opacitySet.representation} → alpha ${result.opacitySet.alpha}.`,
+    );
+  }
   if (action === 'components') {
     const components = Array.isArray(result.components) ? result.components : [];
     if (components.length === 0) {
@@ -560,8 +584,9 @@ function formatResult(action, result, answeredBy, caller) {
                 .map((rep) => {
                   const color = typeof rep.color === 'string' ? rep.color : '?';
                   const value = typeof rep.colorValue === 'string' ? ` ${rep.colorValue}` : '';
+                  const opacity = typeof rep.opacity === 'number' && rep.opacity !== 1 ? `, opacity ${rep.opacity}` : '';
                   const hidden = rep.visible === false ? ' (hidden)' : '';
-                  return `${rep.type ?? '?'} [${color}${value}]${hidden}`;
+                  return `${rep.type ?? '?'} [${color}${value}${opacity}]${hidden}`;
                 })
                 .join(', ');
         const hidden = component.visible === false ? ' (hidden)' : '';

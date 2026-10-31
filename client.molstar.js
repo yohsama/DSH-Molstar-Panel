@@ -8530,6 +8530,10 @@ return molstar;
               rParams !== undefined && rParams.colorTheme !== undefined && rParams.colorTheme.params !== undefined
                 ? rParams.colorTheme.params.value
                 : undefined;
+            const alpha =
+              rParams !== undefined && rParams.type !== undefined && rParams.type.params !== undefined
+                ? rParams.type.params.alpha
+                : undefined;
             entry.representations.push({
               type: rParams !== undefined && rParams.type !== undefined ? rParams.type.name : undefined,
               color: rParams !== undefined && rParams.colorTheme !== undefined ? rParams.colorTheme.name : undefined,
@@ -8537,6 +8541,7 @@ return molstar;
                 typeof colorValue === 'number'
                   ? '#' + ('000000' + colorValue.toString(16)).slice(-6)
                   : undefined,
+              opacity: typeof alpha === 'number' ? alpha : 1,
               visible: rCell === undefined || rCell.state === undefined || rCell.state.visible !== false,
             });
           }
@@ -8822,6 +8827,38 @@ return molstar;
         listComponents() {
           if (disposed) return [];
           return describeComponents(viewer);
+        },
+        /**
+         * Set the opacity (Mol* type-param alpha, 0..1) of one representation,
+         * addressed by component index and representation index as listed by
+         * listComponents().
+         */
+        async setRepresentationOpacity(payload) {
+          if (disposed) return undefined;
+          const componentIndex = Math.round(Number(payload.component));
+          const representationIndex = Math.round(Number(payload.representation));
+          const alpha = Math.max(0, Math.min(1, Number(payload.alpha)));
+          if (!Number.isFinite(alpha)) throw new Error('alpha must be a number between 0 and 1.');
+          const current = viewer.plugin.managers.structure.hierarchy.current;
+          const structures = current !== undefined && Array.isArray(current.structures) ? current.structures : [];
+          let seen = -1;
+          for (const ref of structures) {
+            const components = ref !== undefined && Array.isArray(ref.components) ? ref.components : [];
+            for (const component of components) {
+              seen += 1;
+              if (seen !== componentIndex) continue;
+              const reps = Array.isArray(component.representations) ? component.representations : [];
+              const rep = reps[representationIndex];
+              if (rep === undefined || rep.cell === undefined) throw new Error('Representation not found.');
+              const old = rep.cell.transform.params;
+              const typeName = old !== undefined && old.type !== undefined ? old.type.name : undefined;
+              const typeParams = old !== undefined && old.type !== undefined && old.type.params !== undefined ? { ...old.type.params } : {};
+              typeParams.alpha = alpha;
+              await viewer.plugin.state.data.build().to(rep.cell.transform.ref).update({ type: { name: typeName, params: typeParams } }).commit();
+              return describeComponents(viewer);
+            }
+          }
+          throw new Error('Component not found.');
         },
         /** Apply a Mol* state snapshot previously produced by getStateSnapshot. */
         async setStateSnapshot(snapshot) {

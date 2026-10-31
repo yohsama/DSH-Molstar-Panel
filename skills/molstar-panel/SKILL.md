@@ -18,7 +18,8 @@ description: Operate the DSH Mol* Panel plugin — drive the open 3D structure/t
 |---|---|
 | `status` | Which file/format is open, structure count, panel position |
 | `selection` | Read the user's selection-manager contents: residues (chain, auth seq, comp) + equivalent pymol query |
-| `components` | List every structure component in the panel: label, source (static selector or query expression), and each representation's type / color theme / uniform color / visibility |
+| `components` | List every structure component in the panel: label, source (static selector or query expression), and each representation's type / color theme / uniform color / opacity / visibility |
+| `opacity` | Change one representation's opacity: `component` + `representation` indices (from `components`), `alpha` 0–1 |
 | `apply` | Run a query; `mode`: `select` (viewport marks), `highlight`, `focus` (camera) |
 | `style` | Create a **persistent styled component**: one query + one or more representations with optional uniform colors |
 | `clear-style` | Remove all styled components created via `style` |
@@ -103,6 +104,13 @@ Superpose two structures in one panel (each `load` appends a new root):
 
 Then style one of them by chain/expression as usual; clear with `clear-style`
 (components) — to unload whole structures, ask the user to reopen the panel.
+
+Make the protein ghost-transparent behind a ligand:
+
+```json
+{ "action": "components" }
+{ "action": "opacity", "component": 0, "representation": 0, "alpha": 0.25 }
+```
 
 ## Trajectories
 

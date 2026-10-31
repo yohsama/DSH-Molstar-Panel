@@ -500,6 +500,23 @@ window.__ModuleLoader__.load({
           result.components = view.handle.listComponents();
           return { id, ok: true, result };
         }
+        if (command.op === 'opacity') {
+          if (typeof view.handle.setRepresentationOpacity !== 'function') {
+            throw new Error('The open panel runs an older viewer module — refresh the page and retry.');
+          }
+          const result = describeView(view);
+          result.components = await view.handle.setRepresentationOpacity({
+            component: command.component,
+            representation: command.representation,
+            alpha: command.alpha,
+          });
+          result.opacitySet = {
+            component: command.component,
+            representation: command.representation,
+            alpha: command.alpha,
+          };
+          return { id, ok: true, result };
+        }
         if (command.op === 'load') {
           if (typeof command.path !== 'string' || command.path.trim() === '') {
             throw new Error('`path` is required for load');
