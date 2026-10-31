@@ -8,13 +8,6 @@
     "url": "git+https://github.com/yohsama/DSH-Molstar-Panel.git"
   },
   "keywords": ["dsh", "deepseek-harness", "plugin", "molstar", "mol*", "pdb", "cif", "xtc", "trr", "trajectory", "molecular-visualization"],
-  "type": "module",
-  "exports": {
-    ".": "./index.js",
-    "./client": "./client.js",
-    "./locale/*.json": "./locale/*.json",
-    "./icon": "./icon.svg"
-  },
   "files": [
     "index.js",
     "client.js",
@@ -24,10 +17,19 @@
     "locale/*.json",
     "icon.svg",
     "licenses/molstar-LICENSE.txt",
+    "skills/**/*.md",
     "scripts/*.mjs",
     "scripts/*.cjs",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
