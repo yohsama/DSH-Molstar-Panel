@@ -331,7 +331,9 @@ function molstarTool(sessions) {
     description:
       'Operate the Mol* 3D structure panel in the right Sidebar and read what the user has selected there. '
       + 'Use action=status to check whether a structure preview is open, action=selection to read the user\'s current '
-      + 'selection as residues (chain, residue number, component) plus an equivalent PyMOL query, action=apply to '
+      + 'selection as residues (chain, residue number, component) plus an equivalent PyMOL query, '
+      + 'action=components to list every structure component in the panel with its representations '
+      + '(type, color theme, uniform color) and visibility, action=apply to '
       + 'select/highlight/focus arbitrary residues from a query, action=style to add a persistent styled component '
       + '(one query, one or more representations such as cartoon plus ball-and-stick, optional uniform color — e.g. '
       + 'highlight all HIS as cartoon+ball-and-stick in orange), action=clear-style to remove styled components, '
@@ -354,8 +356,8 @@ function molstarTool(sessions) {
       properties: {
         action: {
           type: 'string',
-          enum: ['status', 'selection', 'apply', 'style', 'clear-style', 'state', 'load', 'clear', 'reset', 'layout'],
-          description: 'status: describe the panel; selection: read the current selection; apply: run a query; style: add a styled component; clear-style: remove styled components; state: export/import the Mol* view state; load: append another structure file to the panel; clear: remove marks; reset: reset the camera; layout: move the structure panel to the right or the bottom.',
+          enum: ['status', 'selection', 'components', 'apply', 'style', 'clear-style', 'state', 'load', 'clear', 'reset', 'layout'],
+          description: 'status: describe the panel; selection: read the current selection; components: list the panel\'s structure components and each representation\'s type/color; apply: run a query; style: add a styled component; clear-style: remove styled components; state: export/import the Mol* view state; load: append another structure file to the panel; clear: remove marks; reset: reset the camera; layout: move the structure panel to the right or the bottom.',
         },
         expression: {
           type: 'string',
@@ -474,6 +476,8 @@ function molstarTool(sessions) {
           throw new Error('action=load needs `file`, a workspace path like "confout.gro" or an absolute path');
         }
         command = { op: 'load', path: args.file };
+      } else if (action === 'components') {
+        command = { op: 'components' };
       } else if (action === 'state') {
         command = { op: 'state', snapshot: args.snapshot };
       } else if (action === 'reset') {
@@ -530,6 +534,40 @@ function formatResult(action, result, answeredBy, caller) {
   if (action === 'clear-style') lines.push('Styled components removed.');
   if (action === 'load' && typeof result.loadedFile === 'string') {
     lines.push(`Appended structure: ${result.loadedFile}`);
+  }
+  if (action === 'components') {
+    const components = Array.isArray(result.components) ? result.components : [];
+    if (components.length === 0) {
+      lines.push('Components: none.');
+    } else {
+      lines.push(`Components (${components.length}):`);
+      for (const component of components) {
+        const where =
+          typeof component.structureLabel === 'string'
+            ? `${component.structure}: ${component.structureLabel}`
+            : `structure ${component.structure}`;
+        const source =
+          typeof component.selector === 'string'
+            ? `selector=${component.selector}`
+            : typeof component.expression === 'string'
+              ? `query=${component.expression.length > 120 ? component.expression.slice(0, 120) + '…' : component.expression}`
+              : 'source=?';
+        const reps = Array.isArray(component.representations) ? component.representations : [];
+        const repText =
+          reps.length === 0
+            ? 'no representations'
+            : reps
+                .map((rep) => {
+                  const color = typeof rep.color === 'string' ? rep.color : '?';
+                  const value = typeof rep.colorValue === 'string' ? ` ${rep.colorValue}` : '';
+                  const hidden = rep.visible === false ? ' (hidden)' : '';
+                  return `${rep.type ?? '?'} [${color}${value}]${hidden}`;
+                })
+                .join(', ');
+        const hidden = component.visible === false ? ' (hidden)' : '';
+        lines.push(`  - "${component.label ?? component.selector ?? 'component'}" in ${where} — ${source}; ${repText}${hidden}`);
+      }
+    }
   }
   if (action === 'state') {
     if (result.state === null || result.state === undefined) {

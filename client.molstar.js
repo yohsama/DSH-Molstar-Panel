@@ -8485,6 +8485,66 @@ return molstar;
       }
       return { structures: structures.length, units: chains };
     }
+
+    /** Enumerate the panel's structure components and each representation's style. */
+    function describeComponents(viewer) {
+      const out = [];
+      const current = viewer.plugin.managers.structure.hierarchy.current;
+      const structures = current !== undefined && Array.isArray(current.structures) ? current.structures : [];
+      structures.forEach((ref, structureIndex) => {
+        const structureLabel = ref !== undefined && ref.cell !== undefined && ref.cell.obj !== undefined ? ref.cell.obj.label : undefined;
+        const components = ref !== undefined && Array.isArray(ref.components) ? ref.components : [];
+        for (const component of components) {
+          const cell = component !== undefined ? component.cell : undefined;
+          const params = cell !== undefined && cell.transform !== undefined ? cell.transform.params : undefined;
+          const entry = {
+            structure: structureIndex,
+            structureLabel: structureLabel,
+            label: undefined,
+            selector: undefined,
+            expression: undefined,
+            visible: cell === undefined || cell.state === undefined || cell.state.visible !== false,
+            representations: [],
+          };
+          if (params !== undefined && params !== null) {
+            if (typeof params.label === 'string' && params.label !== '') entry.label = params.label;
+            const type = params.type;
+            if (type !== undefined && type !== null) {
+              if (type.name === 'static') {
+                entry.selector = type.params;
+              } else if (type.name === 'expression' || type.name === 'script') {
+                entry.expression = JSON.stringify(type.params === undefined ? null : type.params);
+              } else {
+                entry.selector = String(type.name);
+              }
+            }
+          }
+          if (entry.label === undefined && cell !== undefined && cell.obj !== undefined && typeof cell.obj.label === 'string') {
+            entry.label = cell.obj.label;
+          }
+          const reps = Array.isArray(component.representations) ? component.representations : [];
+          for (const rep of reps) {
+            const rCell = rep !== undefined ? rep.cell : undefined;
+            const rParams = rCell !== undefined && rCell.transform !== undefined ? rCell.transform.params : undefined;
+            const colorValue =
+              rParams !== undefined && rParams.colorTheme !== undefined && rParams.colorTheme.params !== undefined
+                ? rParams.colorTheme.params.value
+                : undefined;
+            entry.representations.push({
+              type: rParams !== undefined && rParams.type !== undefined ? rParams.type.name : undefined,
+              color: rParams !== undefined && rParams.colorTheme !== undefined ? rParams.colorTheme.name : undefined,
+              colorValue:
+                typeof colorValue === 'number'
+                  ? '#' + ('000000' + colorValue.toString(16)).slice(-6)
+                  : undefined,
+              visible: rCell === undefined || rCell.state === undefined || rCell.state.visible !== false,
+            });
+          }
+          out.push(entry);
+        }
+      });
+      return out;
+    }
     function applySkin(scheme) {
       const dark = scheme === 'dark';
       let style = document.querySelector('style[data-molstar-skin]');
@@ -8757,6 +8817,11 @@ return molstar;
           if (disposed) return undefined;
           const manager = stateManager();
           return manager === undefined ? undefined : manager.getSnapshot(params);
+        },
+        /** The panel's components with their representations and color themes. */
+        listComponents() {
+          if (disposed) return [];
+          return describeComponents(viewer);
         },
         /** Apply a Mol* state snapshot previously produced by getStateSnapshot. */
         async setStateSnapshot(snapshot) {

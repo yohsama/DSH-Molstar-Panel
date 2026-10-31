@@ -492,6 +492,14 @@ window.__ModuleLoader__.load({
           await sleep(120);
           return { id, ok: true, result: describeView(view) };
         }
+        if (command.op === 'components') {
+          if (typeof view.handle.listComponents !== 'function') {
+            throw new Error('The open panel runs an older viewer module — refresh the page and retry.');
+          }
+          const result = describeView(view);
+          result.components = view.handle.listComponents();
+          return { id, ok: true, result };
+        }
         if (command.op === 'load') {
           if (typeof command.path !== 'string' || command.path.trim() === '') {
             throw new Error('`path` is required for load');
