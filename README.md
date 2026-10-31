@@ -132,15 +132,13 @@ Mol* S-expressions with `language: 'mol-script'` (`(sel.atom.atom-groups ...)`).
 Both are compiled by Mol*'s own parser and transpiler, bundled as the 67 KiB
 lazy chunk `client.molscript.js`.
 
-## Recipes
+## Agent skill
 
-The preview carries a built-in recipe collection: a flask button on the canvas
-(below the panel-pin bubble) opens a menu of one-click bundles. Each recipe is
-a named sequence of the same steps the bridge accepts (`apply` / `style` /
-`clear-style` / `reset`). Shipped recipes: HIS ball-and-stick, HIS orange
-dual, ligand ball-and-stick + focus, charged residues, CYS, and
-clear-styled-components. The list lives in `RECIPES` in `client.js`; steps use
-PyMOL syntax by default or MolScript with `language: 'mol-script'`.
+The bundle ships an agent-facing skill at
+[`skills/molstar-panel/SKILL.md`](skills/molstar-panel/SKILL.md): the `molstar`
+tool's actions and parameters, panel-binding rules, PyMOL/MolScript query
+syntax, copy-paste style recipes, and known limits — everything an agent needs
+to operate the panel precisely without rediscovering the bridge.
 
 The panel long-polls the Host route only while a structure preview is mounted;
 commands are scoped to the calling Session's page. The route binds to the

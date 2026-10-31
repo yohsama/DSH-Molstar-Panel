@@ -76,7 +76,6 @@ window.__ModuleLoader__.load({
       pinToChat: 'Send this panel to the chat',
       pinInserted: 'Inserted into the chat input — press Enter to send',
       pinCopied: 'Copied — paste it into the chat to bind this panel',
-      recipeMenu: 'Structure recipes',
       pinFailed: 'Copy failed — check clipboard permission',
       pinNoView: 'The viewer is not ready yet',
       tabDescription: 'Molecular structures (PDB, MMCIF/CIF, …) shown with Mol* inside the sidebar.',
@@ -100,7 +99,6 @@ window.__ModuleLoader__.load({
       pinToChat: '把此面板发送到对话',
       pinInserted: '已插入对话输入框——回车即可发送',
       pinCopied: '已复制——粘贴到对话即可绑定此面板',
-      recipeMenu: '常用结构操作',
       pinFailed: '复制失败——请检查剪贴板权限',
       pinNoView: '查看器尚未就绪',
       tabDescription: '在侧边栏里用 Mol* 显示分子结构（PDB、MMCIF/CIF 等）。',
@@ -149,30 +147,6 @@ window.__ModuleLoader__.load({
       '.msp-pin-btn:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:1px}',
       '.msp-pin-btn[data-molstar-panel-pin="copied"],.msp-pin-btn[data-molstar-panel-pin="inserted"]{color:var(--dsw-alias-state-success-primary);',
       'border-color:var(--dsw-alias-state-success-primary)}',
-      // Recipe menu: a flask button under the pin button, opening a dropdown
-      // of one-click visualization recipes.
-      '.msp-recipe-btn{position:absolute;z-index:8;display:inline-flex;align-items:center;justify-content:center;',
-      'width:26px;height:26px;padding:0;border:1px solid var(--dsw-alias-border-l1);border-radius:7px;',
-      'background:var(--dsw-alias-bg-overlay);color:var(--dsw-alias-label-secondary);cursor:pointer;opacity:.85}',
-      '.msp-preview[data-molstar-layout="right"] .msp-recipe-btn{',
-      'top:calc(clamp(84px,24%,160px) + 44px);right:calc(clamp(170px,46%,320px) + 50px)}',
-      '.msp-preview[data-molstar-layout="bottom"] .msp-recipe-btn{',
-      'top:calc(clamp(84px,24%,160px) + 44px);right:50px}',
-      '.msp-recipe-btn:hover{color:var(--dsw-alias-label-primary);opacity:1}',
-      '.msp-recipe-btn:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:1px}',
-      '.msp-recipe-btn[data-molstar-recipe-open]{color:var(--dsw-alias-brand-primary);border-color:var(--dsw-alias-brand-primary)}',
-      '.msp-recipe-backdrop{position:fixed;inset:0;z-index:9}',
-      '.msp-recipe-menu{position:absolute;z-index:10;min-width:190px;padding:4px;display:flex;flex-direction:column;gap:1px;',
-      'border-radius:8px;background:var(--dsw-alias-bg-overlay);border:1px solid var(--dsw-alias-border-l1)}',
-      '.msp-preview[data-molstar-layout="right"] .msp-recipe-menu{',
-      'top:calc(clamp(84px,24%,160px) + 76px);right:calc(clamp(170px,46%,320px) + 50px)}',
-      '.msp-preview[data-molstar-layout="bottom"] .msp-recipe-menu{',
-      'top:calc(clamp(84px,24%,160px) + 76px);right:50px}',
-      '.msp-recipe-item{text-align:left;padding:6px 10px;border:0;border-radius:5px;background:transparent;',
-      'color:var(--dsw-alias-label-primary);font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}',
-      '.msp-recipe-item:hover{background:var(--dsw-alias-bg-layer-2)}',
-      '.msp-recipe-item:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:-1px}',
-      '.msp-recipe-item:disabled{opacity:.5;cursor:default}',
       // Mol*'s own layouts use fixed pixel insets sized for a full window. In a
       // Sidebar pane the sequence bar and the structure panel are arranged
       // against this container instead: `data-molstar-layout` chooses whether
@@ -708,141 +682,6 @@ window.__ModuleLoader__.load({
       );
     }
 
-    /**
-     * Built-in visualization recipes: named, one-click bundles of the same
-     * commands the agent can send over the bridge. Each step is either
-     * clear-style / reset, apply (select/highlight/focus) or style (a
-     * persistent component with representations).
-     */
-    const RECIPES = [
-      {
-        id: 'his-bs',
-        zh: 'HIS 球棍',
-        en: 'HIS ball-and-stick',
-        steps: [
-          { kind: 'apply', expression: 'resn HIS', mode: 'select' },
-          {
-            kind: 'style',
-            expression: 'resn HIS',
-            key: 'his-set',
-            label: 'HIS',
-            representations: [{ type: 'ball-and-stick' }],
-          },
-        ],
-      },
-      {
-        id: 'his-orange-dual',
-        zh: 'HIS 橙色双表示',
-        en: 'HIS orange dual',
-        steps: [
-          { kind: 'clear-style' },
-          {
-            kind: 'style',
-            expression: 'resn HIS',
-            key: 'his-dual',
-            label: 'HIS',
-            color: '#ff8800',
-            representations: [{ type: 'cartoon' }, { type: 'ball-and-stick' }],
-          },
-        ],
-      },
-      {
-        id: 'ligand-pocket',
-        zh: '配体球棍 + 聚焦',
-        en: 'Ligand ball-and-stick + focus',
-        steps: [
-          {
-            kind: 'style',
-            expression: 'resn T13 or resn CoA',
-            key: 'ligand',
-            label: 'Ligand',
-            representations: [{ type: 'ball-and-stick' }],
-          },
-          { kind: 'apply', expression: 'resn T13 or resn CoA', mode: 'focus' },
-        ],
-      },
-      {
-        id: 'charged',
-        zh: '带电残基球棍',
-        en: 'Charged residues',
-        steps: [
-          {
-            kind: 'style',
-            expression: 'resn ASP or resn GLU or resn LYS or resn ARG',
-            key: 'charged',
-            label: 'Charged',
-            representations: [{ type: 'ball-and-stick' }],
-          },
-        ],
-      },
-      {
-        id: 'cys',
-        zh: 'CYS 球棍',
-        en: 'CYS ball-and-stick',
-        steps: [
-          {
-            kind: 'style',
-            expression: 'resn CYS',
-            key: 'cys',
-            label: 'CYS',
-            representations: [{ type: 'ball-and-stick' }],
-          },
-        ],
-      },
-      {
-        id: 'clear-styles',
-        zh: '清除样式组件',
-        en: 'Clear styled components',
-        steps: [{ kind: 'clear-style' }],
-      },
-    ];
-
-    /** @returns the localized title of one recipe. */
-    function recipeTitle(recipe) {
-      const lang = typeof navigator !== 'undefined' ? navigator.language || '' : '';
-      return /^zh/i.test(lang) ? recipe.zh : recipe.en;
-    }
-
-    /** Run one recipe against a mounted viewer handle. */
-    async function runRecipe(handle, recipe) {
-      if (handle === null || handle === undefined) throw new Error('The viewer is not ready yet.');
-      for (const step of recipe.steps) {
-        if (step.kind === 'clear-style') {
-          await handle.clearComponents();
-          continue;
-        }
-        if (step.kind === 'reset') {
-          handle.resetCamera();
-          continue;
-        }
-        const script = await require.async('./client.molscript.js');
-        const expression =
-          step.language === 'mol-script'
-            ? script.toExpression(step.expression)
-            : script.toPymolExpression(step.expression);
-        if (step.kind === 'apply') {
-          handle.applyExpression(expression, step.mode || 'select');
-        } else if (step.kind === 'style') {
-          const fallbackColor = typeof step.color === 'string' ? styleColorToInt(step.color) : undefined;
-          await handle.addComponent(expression, {
-            key: typeof step.key === 'string' ? step.key : undefined,
-            label: typeof step.label === 'string' ? step.label : undefined,
-            representations: (
-              Array.isArray(step.representations) && step.representations.length > 0
-                ? step.representations
-                : [{ type: 'ball-and-stick' }]
-            ).map((rep) => ({
-              type: typeof rep === 'object' && rep !== null && typeof rep.type === 'string' ? rep.type : 'ball-and-stick',
-              color:
-                typeof rep === 'object' && rep !== null && typeof rep.color === 'string'
-                  ? styleColorToInt(rep.color)
-                  : fallbackColor,
-            })),
-          });
-        }
-      }
-    }
-
     /** Encode one mounted viewer's identity into a bind token for the chat. */
     function encodePanelToken(view) {
       try {
@@ -902,28 +741,12 @@ window.__ModuleLoader__.load({
         modelPending,
         trajectory,
         inputActions,
+        pluginCtx,
       } = props;
       const isTrajectory = trajectoryFormatOf(fileName) !== undefined;
       const effectiveBytes = trajectory !== undefined ? trajectory.blob : bytes;
       const [frameInfo, setFrameInfo] = React.useState(undefined);
       const [pinState, setPinState] = React.useState('idle');
-      const [recipeOpen, setRecipeOpen] = React.useState(false);
-      const [recipeBusy, setRecipeBusy] = React.useState(false);
-
-      /** Execute one built-in recipe against this surface's handle. */
-      const onRunRecipe = async (recipe) => {
-        setRecipeOpen(false);
-        if (recipeBusy) return;
-        setRecipeBusy(true);
-        try {
-          await runRecipe(handleRef.current, recipe);
-        } catch {
-          setPinState('failed');
-          setTimeout(() => setPinState('idle'), 2000);
-        } finally {
-          setRecipeBusy(false);
-        }
-      };
 
       /** Copy this panel's bind token (and current selection) for the chat. */
       const onPinPanel = async () => {
@@ -955,24 +778,40 @@ window.__ModuleLoader__.load({
         } catch {
           // The selection line is optional.
         }
-        // Preferred path: insert straight into this panel's chat composer.
+        // 1) Insert into the owning Session's composer through its input shell.
+        let inserted = false;
         try {
-          if (
-            inputActions !== undefined &&
-            inputActions !== null &&
-            typeof inputActions.captureInsertion === 'function' &&
-            typeof inputActions.insertText === 'function'
-          ) {
-            const span = inputActions.captureInsertion();
-            if (inputActions.insertText(text + '\n', span) === true) {
-              setPinState('inserted');
-              setTimeout(() => setPinState('idle'), 2500);
-              return;
-            }
+          const sessions =
+            pluginCtx !== undefined && typeof pluginCtx.get === 'function' ? pluginCtx.get('sessions') : undefined;
+          const scope = sessions !== undefined && typeof sessions.scope === 'function' ? sessions.scope(sessionId) : undefined;
+          if (scope !== undefined && typeof scope.emit === 'function') {
+            inserted = scope.emit('slash/input-insert-text', { text: text + '\n', span: undefined, continue: true }) === true;
           }
         } catch {
-          // Fall through to the clipboard.
+          inserted = false;
         }
+        // 2) Slot-provided inputActions, when present.
+        if (!inserted) {
+          try {
+            if (
+              inputActions !== undefined &&
+              inputActions !== null &&
+              typeof inputActions.captureInsertion === 'function' &&
+              typeof inputActions.insertText === 'function'
+            ) {
+              const span = inputActions.captureInsertion();
+              inserted = inputActions.insertText(text + '\n', span) === true;
+            }
+          } catch {
+            inserted = false;
+          }
+        }
+        if (inserted) {
+          setPinState('inserted');
+          setTimeout(() => setPinState('idle'), 2500);
+          return;
+        }
+        // 3) Clipboard fallback.
         const ok = await copyTextToClipboard(text);
         setPinState(ok === true ? 'copied' : 'failed');
         setTimeout(() => setPinState('idle'), 2500);
@@ -1177,61 +1016,6 @@ window.__ModuleLoader__.load({
               ),
             )
           : null,
-        format !== undefined
-          ? h(
-              React.Fragment,
-              null,
-              h(
-                'button',
-                {
-                  type: 'button',
-                  className: 'msp-recipe-btn',
-                  title: typeof t === 'function' ? t('recipeMenu') : 'Structure recipes',
-                  'aria-label': typeof t === 'function' ? t('recipeMenu') : 'Structure recipes',
-                  'aria-expanded': recipeOpen,
-                  'data-molstar-recipe-open': recipeOpen ? '' : undefined,
-                  onClick: () => setRecipeOpen(!recipeOpen),
-                },
-                h(
-                  'svg',
-                  { viewBox: '0 0 16 16', width: 15, height: 15, 'aria-hidden': true, focusable: 'false' },
-                  h('path', {
-                    d: 'M6.2 2h3.6v3.1l2.3 4.7a1.6 1.6 0 0 1-1.4 2.3H5.3A1.6 1.6 0 0 1 3.9 9.8l2.3-4.7V2Z',
-                    fill: 'none',
-                    stroke: 'currentColor',
-                    strokeWidth: 1.2,
-                    strokeLinejoin: 'round',
-                  }),
-                  h('path', { d: 'M5.6 9.5h4.8', stroke: 'currentColor', strokeWidth: 1.2 }),
-                ),
-              ),
-              recipeOpen
-                ? h(
-                    React.Fragment,
-                    null,
-                    h('div', { className: 'msp-recipe-backdrop', onClick: () => setRecipeOpen(false) }),
-                    h(
-                      'div',
-                      { className: 'msp-recipe-menu', role: 'menu' },
-                      RECIPES.map((recipe) =>
-                        h(
-                          'button',
-                          {
-                            key: recipe.id,
-                            type: 'button',
-                            role: 'menuitem',
-                            className: 'msp-recipe-item',
-                            disabled: recipeBusy,
-                            onClick: () => onRunRecipe(recipe),
-                          },
-                          recipeTitle(recipe),
-                        ),
-                      ),
-                    ),
-                  )
-                : null,
-            )
-          : null,
         status !== 'ready' &&
           h(
             'div',
@@ -1276,6 +1060,7 @@ window.__ModuleLoader__.load({
         t,
         themeStore,
         inputActions,
+        pluginCtx,
         model,
         modelPending: modelState.kind === 'loading',
         errorText: modelState.kind === 'failed' ? modelState.message : undefined,
