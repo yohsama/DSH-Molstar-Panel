@@ -176,9 +176,10 @@ node scripts/check-chunk.cjs client.molscript.js
 
 ## Limits
 
-- The Host's complete-file read cap (`maxFileBytes`) bounds the preview; very
-  large structures and trajectories fail with the document preview's own error
-  state. Trajectories are read whole, so multi-GB `xtc`/`trr` files exceed it.
+- The bundle patch sets the workspace file service's complete-file cap
+  (`maxFileBytes`, DSH default 32 MiB) to `null`, so large structures and
+  trajectories open; browser memory is then the practical limit, and `xtc`/`trr`
+  windows still read through byte ranges once indexed.
 - Binary CIF (`.bcif`) and gzipped structures are not handled; GROMACS
   `.tng`/`.edr` are not molecular-structure formats and stay unclaimed.
 - Mol* needs WebGL; without it the renderer reports the failure instead of
