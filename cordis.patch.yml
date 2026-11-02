@@ -1,12 +1,13 @@
 # DSH Mol* Panel bundle patch.
 #
 # - inserts the plugin row (Host tool + bridge, Client preview)
-# - removes the workspace file-read byte cap so large structures and
-#   trajectories can be opened in the panel (browser memory becomes the
-#   only practical limit; trajectory windows still use ranged reads)
+# - targets the workspace-files row by id to remove its complete-file byte
+#   cap, so large structures and trajectories open in the panel (browser
+#   memory becomes the only practical limit; trajectory windows still read
+#   through byte ranges)
 - insert:
     - id: molstar-preview
       name: dsh-molstar-preview
-- override: id: workspace-files
+- id: workspace-files
   config:
     maxFileBytes: null
