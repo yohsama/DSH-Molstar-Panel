@@ -1,6 +1,6 @@
 {
   "name": "dsh-molstar-preview",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "private": false,
   "description": "Mol* (Molstar) panel plugin for DeepSeek Harness: interactive 3D preview for PDB/MMCIF structures and GROMACS/AMBER/CHARMM trajectories, with agent-operable selections, styles, and state snapshots.",
   "repository": {
